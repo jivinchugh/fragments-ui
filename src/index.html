@@ -1,28 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Fragments UI</title>
-    <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
-    <script type="module" src="./app.js"></script>
-  </head>
-  <body>
-    <h1>Fragments UI</h1>
-    <section>
-      <nav>
-        <button id="login">Login</button> 
-        <button id="logout">Logout</button>
-      </nav>
-    </section>
-    <section hidden id="user">
-      <h2>Hello <span class="username"></span>!</h2>
 
-      <!-- Text area for creating a new fragment -->
-      <textarea id="fragmentText" placeholder="Enter your text fragment"></textarea>
-      <button id="createFragment">Create Fragment</button>
+<head>
+  <meta charset="utf-8" />
+  <title>Fragments UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
+  <script type="module" src="./app.js"></script>
+</head>
 
-      <!-- Status message for fragment creation -->
-      <div id="fragmentStatus"></div>
-    </section>
-  </body>
+<body>
+  <h1>Fragments UI</h1>
+  <section>
+    <nav>
+      <button id="login">Login</button>
+      <button id="logout">Logout</button>
+    </nav>
+  </section>
+  <section hidden id="user">
+    <h2>Hello <span class="username"></span>!</h2>
+
+    <!-- Text area for creating a new fragment -->
+    <textarea id="fragmentText" placeholder="Enter your text fragment"></textarea>
+    <button id="createFragment">Create Fragment</button>
+
+    <!-- Status message for fragment creation -->
+    <div id="fragmentStatus"></div>
+
+    <input type="text" id="fragmentId" placeholder="Enter Fragment ID" />
+    <button id="fetchFragment">Fetch Fragment</button>
+
+    <!-- Table for displaying fragment details -->
+    <div id="fragmentDetails" hidden>
+      <h3>Fragment Details</h3>
+      <table id="fragment-details-table">
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody id="fragment-details-body">
+          <!-- Rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+</body>
+
 </html>
