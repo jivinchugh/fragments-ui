@@ -55,11 +55,10 @@ async function init() {
       return;
     }
 
-    // Save the fragment
     try {
       await saveUserFragment(user, 'text/plain', textValue);
       fragmentStatus.innerHTML = "Fragment created successfully: " + textValue;
-      fragmentText.value = ""; // Clear the input after creation
+      fragmentText.value = ""; 
     } catch (error) {
       fragmentStatus.innerHTML = "Failed to create fragment.";
       console.error("Error creating fragment:", error);
