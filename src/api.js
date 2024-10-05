@@ -13,9 +13,6 @@ export async function getUserFragments(user, expand = false) {
   console.log('Requesting user fragments data...');
   try {
     const res = await fetch(`${apiUrl}/v1/fragments?expand=1`, {
-      // Generate headers with the proper Authorization bearer token to pass.
-      // We are using the `authorizationHeaders()` helper method we defined
-      // earlier, to automatically attach the user's ID token.
       method: "GET",
       headers: user.authorizationHeaders(),
     });
@@ -30,7 +27,7 @@ export async function getUserFragments(user, expand = false) {
   }
 }
 
-export async function saveUserFragments(user, typeofFragment, frag) {
+export async function saveUserFragment(user, typeofFragment, frag) {
   console.log('Sending data to create fragment...');
   try {
     const res = await fetch(`${apiUrl}/v1/fragments`, {
@@ -47,7 +44,31 @@ export async function saveUserFragments(user, typeofFragment, frag) {
     const data = await res.json();
     console.log('Successfully created fragments with data -> ', { data });
   } catch (err) {
-    console.error("Error saving the fragment", {err});
+    console.error("Error saving the fragment", { err });
+    throw err;
+  }
+}
+
+export async function getUserFragmentById(user, id) {
+  console.log('Fetching fragment by ID:', id);
+  if (!id) {
+    throw new Error('Fragment ID is required');
+  }
+  try {
+    const res = await fetch(`${apiUrl}/v1/fragments/${id}?expand=1`, {
+      method: 'GET',
+      headers: user.authorizationHeaders(),
+    });
+    console.log('Response from API:', res); 
+
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    }
+    const data = await res.json();
+    console.log('Successfully fetched fragment:', data);
+    return data;
+  } catch (err) {
+    console.error('Error fetching fragment by ID:', err);
     throw err;
   }
 }
