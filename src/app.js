@@ -1,23 +1,23 @@
 // src/app.js
 
 import { Auth, getUser } from './auth';
-import { getUserFragments } from './api';
+import { getUserFragments, saveUserFragment } from './api';
 
 async function init() {
   // Get our UI elements
   const userSection = document.querySelector('#user');
   const loginBtn = document.querySelector('#login');
   const logoutBtn = document.querySelector('#logout');
+  const createFragmentBtn = document.querySelector('#createFragment');
+  const fragmentText = document.querySelector('#fragmentText');
+  const fragmentStatus = document.querySelector('#fragmentStatus');
 
   // Wire up event handlers to deal with login and logout.
   loginBtn.onclick = () => {
-    // Sign-in via the Amazon Cognito Hosted UI (requires redirects), see:
-    // https://docs.amplify.aws/lib/auth/advanced/q/platform/js/#identity-pool-federation
     Auth.federatedSignIn();
   };
+
   logoutBtn.onclick = () => {
-    // Sign-out of the Amazon Cognito Hosted UI (requires redirects), see:
-    // https://docs.amplify.aws/lib/auth/emailpassword/q/platform/js/#sign-out
     Auth.signOut();
   };
 
@@ -41,9 +41,30 @@ async function init() {
   // Disable the Login button
   loginBtn.disabled = true;
 
-  // Do an authenticated request to the fragments API server and log the result
+  // Load existing user fragments
   const userFragments = await getUserFragments(user);
-  
+  console.log('User Fragments:', userFragments);
+
+  // Functionality to create a new fragment
+  createFragmentBtn.onclick = async () => {
+    const textValue = fragmentText.value.trim();
+
+    // Ensure that only plain text is accepted
+    if (!textValue) {
+      fragmentStatus.innerHTML = "Please enter some text to create a fragment.";
+      return;
+    }
+
+    // Save the fragment
+    try {
+      await saveUserFragment(user, 'text/plain', textValue);
+      fragmentStatus.innerHTML = "Fragment created successfully: " + textValue;
+      fragmentText.value = ""; // Clear the input after creation
+    } catch (error) {
+      fragmentStatus.innerHTML = "Failed to create fragment.";
+      console.error("Error creating fragment:", error);
+    }
+  };
 }
 
 // Wait for the DOM to be ready, then start the app
