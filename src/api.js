@@ -30,7 +30,7 @@ export async function getUserFragments(user, expand = false) {
   }
 }
 
-export async function saveUserFragment(user, typeofFragment, frag) {
+export async function saveUserFragments(user, typeofFragment, frag) {
   console.log('Sending data to create fragment...');
   try {
     const res = await fetch(`${apiUrl}/v1/fragments`, {
