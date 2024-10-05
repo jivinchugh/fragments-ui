@@ -9,10 +9,20 @@
   <body>
     <h1>Fragments UI</h1>
     <section>
-      <nav><button id="login">Login</button> <button id="logout">Logout</button></nav>
+      <nav>
+        <button id="login">Login</button> 
+        <button id="logout">Logout</button>
+      </nav>
     </section>
     <section hidden id="user">
       <h2>Hello <span class="username"></span>!</h2>
+
+      <!-- Text area for creating a new fragment -->
+      <textarea id="fragmentText" placeholder="Enter your text fragment"></textarea>
+      <button id="createFragment">Create Fragment</button>
+
+      <!-- Status message for fragment creation -->
+      <div id="fragmentStatus"></div>
     </section>
   </body>
 </html>
