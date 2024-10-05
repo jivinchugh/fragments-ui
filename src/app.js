@@ -1,7 +1,7 @@
 // src/app.js
 
 import { Auth, getUser } from './auth';
-import { getUserFragments, saveUserFragment } from './api';
+import { getUserFragments, saveUserFragment, getUserFragmentById } from './api';
 
 async function init() {
   // Get our UI elements
@@ -11,6 +11,10 @@ async function init() {
   const createFragmentBtn = document.querySelector('#createFragment');
   const fragmentText = document.querySelector('#fragmentText');
   const fragmentStatus = document.querySelector('#fragmentStatus');
+  const fetchFragmentBtn = document.querySelector('#fetchFragment');
+  const fragmentIdInput = document.querySelector('#fragmentId'); 
+  const fragmentDetails = document.querySelector('#fragmentDetails'); 
+  const fragmentDetailsBody = document.querySelector('#fragment-details-body');
 
   // Wire up event handlers to deal with login and logout.
   loginBtn.onclick = () => {
@@ -62,6 +66,38 @@ async function init() {
     } catch (error) {
       fragmentStatus.innerHTML = "Failed to create fragment.";
       console.error("Error creating fragment:", error);
+    }
+  };
+
+  // Event handler to fetch a fragment by ID
+  fetchFragmentBtn.onclick = async () => {
+    const idValue = fragmentIdInput.value.trim();
+
+    if (!idValue) {
+      fragmentStatus.innerHTML = "Please enter a fragment ID.";
+      fragmentDetails.hidden = true; // Hide fragment details if no ID is provided
+      return;
+    }
+
+    try {
+      const fragmentData = await getUserFragmentById(user, idValue);
+      fragmentStatus.innerHTML = ""; // Clear any previous status message
+      
+      // Clear previous table data
+      fragmentDetailsBody.innerHTML = '';
+
+      // Populate table with new fragment data
+      for (const [key, value] of Object.entries(fragmentData.fragment)) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${key}</td><td>${value}</td>`;
+        fragmentDetailsBody.appendChild(row);
+      }
+
+      fragmentDetails.hidden = false; // Show the fragment details section
+    } catch (error) {
+      fragmentStatus.innerHTML = "Failed to fetch fragment details.";
+      console.error("Error fetching fragment:", error);
+      fragmentDetails.hidden = true; // Hide the fragment details on error
     }
   };
 }
