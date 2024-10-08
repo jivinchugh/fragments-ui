@@ -63,6 +63,8 @@ async function init() {
       await saveUserFragment(user, 'text/plain', textValue);
       fragmentStatus.innerHTML = "Fragment created successfully: " + textValue;
       fragmentText.value = ""; 
+      const updatedFragments = await getUserFragments(user);
+      console.log('Updated User Fragments:', updatedFragments);
     } catch (error) {
       fragmentStatus.innerHTML = "Failed to create fragment.";
       console.error("Error creating fragment:", error);
