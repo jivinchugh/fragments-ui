@@ -5,6 +5,133 @@
   <meta charset="utf-8" />
   <title>Fragments UI</title>
   <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Body styling */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    /* Heading styles */
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-top: 20px;
+    }
+
+    /* Navigation bar styling */
+    nav {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    nav button {
+      margin: 0 10px;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    nav button:hover {
+      background-color: #0056b3;
+    }
+
+    /* User section styling */
+    #user {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Label and input styles */
+    label {
+      font-weight: bold;
+    }
+
+    textarea,
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    /* Button styling for fragment creation and fetching */
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    /* Status message styling */
+    #fragmentStatus {
+      color: #dc3545; /* Bootstrap danger color */
+      margin: 10px 0;
+    }
+
+    /* Fragment details table styling */
+    #fragmentDetails {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      max-width: 600px; /* Set max width */
+      overflow: hidden; /* Prevent overflow */
+    }
+
+    /* Scroll container for the table */
+    .scroll-container {
+      overflow-x: auto; /* Allow horizontal scrolling */
+      margin-top: 10px;
+    }
+
+    #fragment-details-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #fragment-details-table th,
+    #fragment-details-table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    #fragment-details-table th {
+      background-color: #f1f1f1;
+    }
+  </style>
   <script type="module" src="./app.js"></script>
 </head>
 
@@ -19,8 +146,16 @@
   <section hidden id="user">
     <h2>Hello <span class="username"></span>!</h2>
 
+    <!-- Content type selector for fragment creation -->
+    <label for="fragmentType">Select Content Type:</label>
+    <select id="fragmentType">
+      <option value="text/plain">Plain Text</option>
+      <option value="text/html">HTML</option>
+      <option value="application/json">JSON</option>
+    </select>
+
     <!-- Text area for creating a new fragment -->
-    <textarea id="fragmentText" placeholder="Enter your text fragment"></textarea>
+    <textarea id="fragmentText" placeholder="Enter your fragment"></textarea>
     <button id="createFragment">Create Fragment</button>
 
     <!-- Status message for fragment creation -->
@@ -32,17 +167,19 @@
     <!-- Table for displaying fragment details -->
     <div id="fragmentDetails" hidden>
       <h3>Fragment Details</h3>
-      <table id="fragment-details-table">
-        <thead>
-          <tr>
-            <th>Property</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody id="fragment-details-body">
-          <!-- Rows will be populated here -->
-        </tbody>
-      </table>
+      <div class="scroll-container">
+        <table id="fragment-details-table">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="fragment-details-body">
+            <!-- Rows will be populated here -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </section>

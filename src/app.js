@@ -1,5 +1,3 @@
-// src/app.js
-
 import { Auth, getUser } from './auth';
 import { getUserFragments, saveUserFragment, getUserFragmentById } from './api';
 
@@ -15,6 +13,9 @@ async function init() {
   const fragmentIdInput = document.querySelector('#fragmentId'); 
   const fragmentDetails = document.querySelector('#fragmentDetails'); 
   const fragmentDetailsBody = document.querySelector('#fragment-details-body');
+
+  // New element for content type selection
+  const fragmentTypeSelector = document.querySelector('#fragmentType'); 
 
   // Wire up event handlers to deal with login and logout.
   loginBtn.onclick = () => {
@@ -52,17 +53,28 @@ async function init() {
   // Functionality to create a new fragment
   createFragmentBtn.onclick = async () => {
     const textValue = fragmentText.value.trim();
+    const fragmentType = fragmentTypeSelector.value; // Get the selected content type
 
     // Ensure that only plain text is accepted
     if (!textValue) {
-      fragmentStatus.innerHTML = "Please enter some text to create a fragment.";
+      fragmentStatus.innerHTML = "Please enter some content to create a fragment.";
       return;
     }
 
+    // If JSON is selected, validate JSON format
+    if (fragmentType === 'application/json') {
+      try {
+        JSON.parse(textValue); // Attempt to parse as JSON to validate format
+      } catch (e) {
+        fragmentStatus.innerHTML = "Invalid JSON format.";
+        return;
+      }
+    }
+
     try {
-      await saveUserFragment(user, 'text/plain', textValue);
+      await saveUserFragment(user, fragmentType, textValue); // Use the selected content type
       fragmentStatus.innerHTML = "Fragment created successfully: " + textValue;
-      fragmentText.value = ""; 
+      fragmentText.value = ""; // Clear the input field after success
       const updatedFragments = await getUserFragments(user);
       console.log('Updated User Fragments:', updatedFragments);
     } catch (error) {
@@ -104,5 +116,5 @@ async function init() {
   };
 }
 
-// Wait for the DOM to be ready, then start the app
-addEventListener('DOMContentLoaded', init);
+// Wait for the DOM to be ready, then initialize the app
+document.addEventListener('DOMContentLoaded', init);
