@@ -1,69 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Fragments UI</title>
-  <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
-  <link rel="stylesheet" href="style.css" />
-  <script type="module" src="./app.js"></script>
+    <meta charset="utf-8" />
+    <title>Fragments UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="./app.js"></script>
 </head>
 <body>
-  <h1>Fragments UI</h1>
-  <section>
-    <nav>
-      <button id="login">Login</button>
-      <button id="logout">Logout</button>
-    </nav>
-  </section>
-  <section hidden id="user">
-    <h2>Hello <span class="username"></span>!</h2>
+    <div class="container">
+        <h1>Fragments UI</h1>
+        <nav>
+            <button id="login">Login</button>
+            <button id="logout">Logout</button>
+        </nav>
+        <section hidden id="user" class="user-section">
+            <h2>Hello <span class="username"></span>!</h2>
+            <div class="content">
+                <div class="fragment-creation">
+                    <h3>Create a Fragment</h3>
+                    <label for="fragmentType">Select Content Type:</label>
+                    <select id="fragmentType">
+                        <option value="text/plain">Plain Text</option>
+                        <option value="text/html">HTML</option>
+                        <option value="application/json">JSON</option>
+                    </select>
+                    <textarea id="fragmentText" placeholder="Enter your fragment"></textarea>
+                    <button id="createFragment">Create Fragment</button>
+                    <div id="fragmentStatus"></div>
+                    <input type="text" id="fragmentId" placeholder="Enter Fragment ID" />
+                    <button id="fetchFragment">Fetch Fragment</button>
+                    <div id="fragmentDetails" hidden>
+                        <h3>Fragment Details</h3>
+                        <div class="scroll-container">
+                            <table id="fragment-details-table">
+                                <thead>
+                                    <tr>
+                                        <th>Property</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fragment-details-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="fragment-list">
+                    <h3>Your Fragments</h3>
+                    <table id="fragmentTable">
+                        <thead>
+                            <tr>
+                                <th>Fragment ID</th>
+                                <th>Type</th>
+                                <th>Created</th>
+                                <th>Updated</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fragmentTableBody">
+                            <tr><td colspan="4">No fragments available.</td></tr>
+                        </tbody>
 
-    <!-- Fragment table display -->
-    <h3>Your Fragments</h3>
-    <table id="fragmentTable">
-      <thead>
-        <tr>
-          <th>Fragment ID</th>
-          <th>Type</th>
-          <th>Created At</th>
-          <th>Updated At</th>
-        </tr>
-      </thead>
-      <tbody id="fragmentTableBody">
-        <tr><td colspan="4">No fragments available.</td></tr>
-      </tbody>
-    </table>
-
-    <!-- Fragment creation form -->
-    <label for="fragmentType">Select Content Type:</label>
-    <select id="fragmentType">
-      <option value="text/plain">Plain Text</option>
-      <option value="text/html">HTML</option>
-      <option value="application/json">JSON</option>
-    </select>
-    <textarea id="fragmentText" placeholder="Enter your fragment"></textarea>
-    <button id="createFragment">Create Fragment</button>
-    <div id="fragmentStatus"></div>
-
-    <!-- Fragment ID input for fetching a specific fragment -->
-    <input type="text" id="fragmentId" placeholder="Enter Fragment ID" />
-    <button id="fetchFragment">Fetch Fragment</button>
-
-    <!-- Table for displaying selected fragment details -->
-    <div id="fragmentDetails" hidden>
-      <h3>Fragment Details</h3>
-      <div class="scroll-container">
-        <table id="fragment-details-table">
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody id="fragment-details-body"></tbody>
-        </table>
-      </div>
+                    </table>
+                </div>
+            </div>
+        </section>
     </div>
-  </section>
 </body>
 </html>
