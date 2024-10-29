@@ -34,15 +34,19 @@ async function init() {
   const displayFragments = async () => {
     const userFragments = await getUserFragments(user);
     fragmentTableBody.innerHTML = '';
-
+  
     if (userFragments && userFragments.fragments.length) {
+      // Sort fragments by created date in descending order
+      userFragments.fragments.sort((a, b) => new Date(b.created) - new Date(a.created));
+  
       userFragments.fragments.forEach(fragment => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td class="fragment-id">${fragment.id}</td>
           <td>${fragment.type}</td>
-          <td>${new Date(fragment.createdAt).toLocaleString()}</td>
-          <td>${new Date(fragment.updatedAt).toLocaleString()}</td>
+          <td>${new Date(fragment.created).toLocaleString()}</td>
+          <td>${new Date(fragment.updated).toLocaleString()}</td>
+          <td>${fragment.size}</td>
         `;
         row.querySelector('.fragment-id').onclick = () => fetchFragmentById(fragment.id);
         fragmentTableBody.appendChild(row);
@@ -51,7 +55,7 @@ async function init() {
       fragmentTableBody.innerHTML = '<tr><td colspan="4">No fragments available.</td></tr>';
     }
   };
-
+  
   await displayFragments();
 
   createFragmentBtn.onclick = async () => {
