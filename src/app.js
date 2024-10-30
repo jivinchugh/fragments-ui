@@ -42,17 +42,22 @@ async function init() {
       userFragments.fragments.forEach(fragment => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td class="fragment-id">${fragment.id}</td>
+          <td>${fragment.id}</td>
           <td>${fragment.type}</td>
           <td>${new Date(fragment.created).toLocaleString()}</td>
           <td>${new Date(fragment.updated).toLocaleString()}</td>
           <td>${fragment.size}</td>
+          <td><button class="get-info-btn" data-id="${fragment.id}">Get Info</button></td>
         `;
-        row.querySelector('.fragment-id').onclick = () => fetchFragmentById(fragment.id);
         fragmentTableBody.appendChild(row);
       });
+  
+      // Add event listeners to the "Get Info" buttons
+      document.querySelectorAll('.get-info-btn').forEach(button => {
+        button.onclick = () => fetchFragmentById(button.dataset.id);
+      });
     } else {
-      fragmentTableBody.innerHTML = '<tr><td colspan="4">No fragments available.</td></tr>';
+      fragmentTableBody.innerHTML = '<tr><td colspan="6">No fragments available.</td></tr>';
     }
   };
   
