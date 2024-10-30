@@ -55,7 +55,7 @@ export async function getUserFragmentById(user, id) {
     throw new Error('Fragment ID is required');
   }
   try {
-    const res = await fetch(`${apiUrl}/v1/fragments/${id}?expand=1`, {
+    const res = await fetch(`${apiUrl}/v1/fragments/${id}/info`, {
       method: 'GET',
       headers: user.authorizationHeaders(),
     });
