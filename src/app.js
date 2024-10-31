@@ -1,3 +1,4 @@
+// src/app.js
 import { Auth, getUser } from './auth';
 import { getUserFragments, saveUserFragment, getUserFragmentById } from './api';
 
@@ -14,6 +15,8 @@ async function init() {
   const fragmentDetailsBody = document.querySelector('#fragment-details-body');
   const fragmentTableBody = document.querySelector('#fragmentTableBody');
   const fragmentTypeSelector = document.querySelector('#fragmentType');
+  const dropArea = document.querySelector('#drop-area');
+  const fileInput = document.querySelector('#fileInput');
 
   loginBtn.onclick = () => Auth.federatedSignIn();
   logoutBtn.onclick = () => Auth.signOut();
@@ -72,13 +75,19 @@ async function init() {
       return;
     }
 
+    let formattedValue;
+    console.log({ textValue });
+    console.log({ fragmentType });
     if (fragmentType === 'application/json') {
-      try {
-        JSON.parse(textValue);
-      } catch (e) {
-        fragmentStatus.innerHTML = "Invalid JSON format.";
-        return;
-      }
+        try {
+            formattedValue = JSON.parse(textValue);
+        } catch (e) {
+            fragmentStatus.innerHTML = "Invalid JSON format.";
+            return;
+        }
+    } else {
+        // For other fragment types, use `textValue` directly
+        formattedValue = textValue;
     }
 
     try {
@@ -120,6 +129,79 @@ async function init() {
     }
     await fetchFragmentById(idValue);
   };
+
+  // Drag and Drop Area Event Handlers
+  dropArea.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    dropArea.classList.add('dragover');
+  });
+
+  dropArea.addEventListener('dragleave', () => {
+    dropArea.classList.remove('dragover');
+  });
+
+  dropArea.addEventListener('drop', async (event) => {
+    event.preventDefault();
+    dropArea.classList.remove('dragover');
+
+    const file = event.dataTransfer.files[0];
+    if (!file) {
+      fragmentStatus.innerHTML = "No file selected.";
+      return;
+    }
+
+    const fragmentType = file.type;
+    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json'].includes(fragmentType)) {
+      fragmentStatus.innerHTML = "Unsupported file type.";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const textValue = e.target.result;
+      try {
+        await saveUserFragment(user, fragmentType, textValue);
+        fragmentStatus.innerHTML = "Fragment created successfully.";
+        await displayFragments();
+      } catch (error) {
+        fragmentStatus.innerHTML = "Failed to create fragment.";
+        console.error("Error creating fragment:", error);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  dropArea.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      fragmentStatus.innerHTML = "No file selected.";
+      return;
+    }
+
+    const fragmentType = file.type;
+    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json'].includes(fragmentType)) {
+      fragmentStatus.innerHTML = "Unsupported file type.";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const textValue = e.target.result;
+      try {
+        await saveUserFragment(user, fragmentType, textValue);
+        fragmentStatus.innerHTML = "Fragment created successfully.";
+        await displayFragments();
+      } catch (error) {
+        fragmentStatus.innerHTML = "Failed to create fragment.";
+        console.error("Error creating fragment:", error);
+      }
+    };
+    reader.readAsText(file);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

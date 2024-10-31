@@ -29,6 +29,13 @@ export async function getUserFragments(user, expand = false) {
 
 export async function saveUserFragment(user, typeofFragment, frag) {
   console.log('Sending data to create fragment...');
+  console.log('Request URL:', `${apiUrl}/v1/fragments`);
+  console.log('Request Headers:', {
+    Authorization: `Bearer ${user.idToken}`,
+    "Content-Type": `${typeofFragment}`,
+  });
+  console.log('Request Body:', frag);
+
   try {
     const res = await fetch(`${apiUrl}/v1/fragments`, {
       method: "POST",
@@ -38,11 +45,19 @@ export async function saveUserFragment(user, typeofFragment, frag) {
       },
       body: `${frag}`,
     });
+
+    console.log('Response Status:', res.status);
+    console.log('Response Status Text:', res.statusText);
+
     if (!res.ok) {
-      throw new Error(`${res.status} ${res.statusText}`);
+      const errorText = await res.text();
+      console.log('Response Error Text:', errorText);
+      throw new Error(`${res.status} ${res.statusText}: ${errorText}`);
     }
+
     const data = await res.json();
-    console.log('Successfully created fragments with data -> ', { data });
+    console.log('Successfully created fragment with data -> ', { data });
+    return data;
   } catch (err) {
     console.error("Error saving the fragment", { err });
     throw err;
