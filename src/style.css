@@ -187,3 +187,18 @@ button:hover {
 #fragmentTable th {
   background-color: #f1f1f1;
 }
+
+/* Drag and Drop Area Styling */
+.drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.drop-area.dragover {
+  background-color: #f1f1f1;
+}

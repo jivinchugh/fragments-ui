@@ -21,12 +21,18 @@
                     <h3>Create a Fragment</h3>
                     <label for="fragmentType">Select Content Type:</label>
                     <select id="fragmentType">
-                        <option value="text/plain">Plain Text</option>
-                        <option value="text/html">HTML</option>
-                        <option value="application/json">JSON</option>
+                        <option value="text/plain">text/plain</option>
+                        <option value="text/markdown">text/markdown</option>
+                        <option value="text/html">text/html</option>
+                        <option value="text/csv">text/csv</option>
+                        <option value="application/json">application/json</option>
                     </select>
                     <textarea id="fragmentText" placeholder="Enter your fragment"></textarea>
                     <button id="createFragment">Create Fragment</button>
+                    <div id="drop-area" class="drop-area">
+                        <p>Drag & Drop your file here</p>
+                        <input type="file" id="fileInput" hidden>
+                    </div>
                     <div id="fragmentStatus"></div>
                     <input type="text" id="fragmentId" placeholder="Enter Fragment ID" />
                     <button id="fetchFragment">Fetch Fragment</button>
@@ -44,6 +50,7 @@
                             </table>
                         </div>
                     </div>
+                    
                 </div>
                 <div class="fragment-list">
                     <h3>Your Fragments</h3>
