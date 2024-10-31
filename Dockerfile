@@ -23,10 +23,8 @@ RUN npm ci --only=production
 
 ########################################################################################################################
 
-
+# Use nginx for the production image
 FROM nginx:1.26.2-alpine@sha256:5b44a5ab8ab467854f2bf7b835a32f850f32eb414b749fbf7ed506b139cd8d6b AS deploy
-
-WORKDIR /app
 
 # Copy the rest of the application code to the working directory
 COPY . .
@@ -48,4 +46,9 @@ ENV AWS_COGNITO_HOSTED_UI_DOMAIN=$AWS_COGNITO_HOSTED_UI_DOMAIN
 ENV OAUTH_SIGN_IN_REDIRECT_URL=$OAUTH_SIGN_IN_REDIRECT_URL
 ENV OAUTH_SIGN_OUT_REDIRECT_URL=$OAUTH_SIGN_OUT_REDIRECT_URL
 
+
+# Expose the Nginx default port
 EXPOSE 80
+
+# Start Nginx server
+CMD ["nginx", "-g", "daemon off;"]
