@@ -1,6 +1,6 @@
 // src/app.js
 import { Auth, getUser } from './auth';
-import { getUserFragments, saveUserFragment, getUserFragmentById, updateFragmentExtension } from './api';
+import { getUserFragments, saveUserFragment, getUserFragmentById, updateFragmentExtension, deleteFragmentById } from './api';
 
 async function init() {
   const userSection = document.querySelector('#user');
@@ -69,7 +69,7 @@ async function init() {
   };
 
   await displayFragments();
-  
+
 
   createFragmentBtn.onclick = async () => {
     const textValue = fragmentText.value.trim();
@@ -136,34 +136,55 @@ async function init() {
 
   // New function to handle update button click
   const handleUpdateClick = async (fragmentId) => {
-    const fragmentData = await getUserFragmentById(user, fragmentId);
-    const fragment = fragmentData.fragment;
+    try {
+      const fragmentData = await getUserFragmentById(user, fragmentId);
+      const fragment = fragmentData.fragment;
 
-    // Create and show the update modal
-    const updateModal = document.createElement('div');
-    updateModal.className = 'update-modal';
-    updateModal.innerHTML = `
-      <div class="update-modal-content">
-        <h2>Update Fragment</h2>
-        <p>Fragment ID: ${fragment.id}</p>
-        <p>Current Type: ${fragment.type}</p>
-        <label for="newExtension">New Extension:</label>
-        <input type="text" id="newExtension" placeholder="Enter new extension (e.g., txt, md, html)">
-        <div id="extensionMessage" style="color: red;"></div>
-        <button id="changeExtBtn">Change Extension</button>
-        <button id="downloadFragBtn">Download Fragment</button>
-        <button id="deleteFragBtn">Delete Fragment</button>
-        <button id="closeModalBtn">Close</button>
-      </div>
-    `;
+      // Create and show the update modal
+      const updateModal = document.createElement('div');
+      updateModal.className = 'update-modal';
+      updateModal.innerHTML = `
+        <div class="update-modal-content">
+          <h2>Update Fragment</h2>
+          <p>Fragment ID: ${fragment.id}</p>
+          <p>Current Type: ${fragment.type}</p>
+          <label id="newExtensionText" for="newExtension">New Extension:</label>
+          <input type="text" id="newExtension" placeholder="Enter new extension (e.g., txt, md, html)">
+          <div id="extensionMessage" style="color: red;"></div>
+          <button id="changeExtBtn">Change Extension</button>
+          <button id="downloadFragBtn">Download Fragment</button>
+          <button id="deleteFragBtn">Delete Fragment</button>
+          <button id="closeModalBtn">Close</button>
+        </div>
+      `;
 
-    document.body.appendChild(updateModal);
+      document.body.appendChild(updateModal);
 
-    // Add event listeners for the buttons
-    document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
-    document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
-    document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
-    document.getElementById('deleteFragBtn').addEventListener('click', () => deleteFragment(fragment.id));
+      // Add event listeners for the buttons
+      document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
+      document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
+      document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
+      document.getElementById('deleteFragBtn').addEventListener('click', () => {
+        deleteFragment(fragment.id)
+          .then(() => {
+            // Hide or remove specific buttons after deletion
+            const changeExtBtn = document.getElementById('changeExtBtn');
+            const downloadFragBtn = document.getElementById('downloadFragBtn');
+            const deleteFragBtn = document.getElementById('deleteFragBtn');
+
+            if (newExtensionText) newExtensionText.style.display = 'none';
+            if (newExtension) newExtension.style.display = 'none';
+            if (changeExtBtn) changeExtBtn.style.display = 'none';
+            if (changeExtBtn) changeExtBtn.style.display = 'none';
+            if (downloadFragBtn) downloadFragBtn.style.display = 'none';
+            if (deleteFragBtn) deleteFragBtn.style.display = 'none';
+
+          });
+      });
+    } catch (error) {
+      console.error('Error fetching fragment details:', error);
+      fragmentStatus.innerHTML = "Failed to load fragment details.";
+    }
   };
 
   // Function to change the extension
@@ -180,17 +201,30 @@ async function init() {
     // Prepend a dot if it doesn't exist
     const formattedExt = newExt.startsWith('.') ? newExt : `.${newExt}`;
 
-
     try {
       // Update the extension on the server
       await updateFragmentExtension(user, fragmentId, formattedExt);
+      messageDiv.style.color = 'green';
       messageDiv.innerHTML = 'Extension updated successfully';
+
+      // Re-fetch the updated fragment data
+      const updatedFragmentData = await getUserFragmentById(user, fragmentId);
+      const updatedFragment = updatedFragmentData.fragment;
+
+      // Update the modal with the new type
+      const currentTypeElement = document.querySelector('.update-modal-content p:nth-child(3)');
+      if (currentTypeElement) {
+        currentTypeElement.innerText = `Current Type: ${updatedFragment.type}`;
+      }
+
       await displayFragments();
     } catch (error) {
       console.error('Error updating extension:', error);
+      messageDiv.style.color = 'red';
       messageDiv.innerHTML = 'Failed to update extension';
     }
   };
+
 
   // Function to download the fragment
   const downloadFragment = async (fragmentId) => {
@@ -201,10 +235,10 @@ async function init() {
         console.error('Failed to retrieve fragment data');
         return;
       }
-  
+
       const fragment = fragmentData.fragment;
       const fragmentType = fragment.type; // Assuming the type is stored in `fragment.type`
-  
+
       // Determine the file extension based on the fragment type
       let fileExtension;
       switch (fragmentType) {
@@ -225,33 +259,45 @@ async function init() {
           console.warn('Unsupported fragment type. Defaulting to .txt');
           fileExtension = '.txt'; // Fallback extension
       }
-  
+
       // Convert content to a Blob (adjust MIME type if needed)
       const blob = new Blob([fragment], { type: fragmentType });
       const url = URL.createObjectURL(blob);
-  
+
       // Create a temporary anchor element for download
       const a = document.createElement('a');
       a.href = url;
       a.download = `fragment_${fragmentId}${fileExtension}`; // Set the file name with the correct extension
-  
+
       // Append the anchor to the body (needed for some browsers)
       document.body.appendChild(a);
       a.click(); // Trigger the download
       document.body.removeChild(a); // Clean up
-  
+
       // Revoke the blob URL to free memory
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading fragment:', error);
     }
   };
-  
+
 
   // Function to delete the fragment
   const deleteFragment = async (fragmentId) => {
+    const messageDiv = document.getElementById('extensionMessage');
+    const updateModal = document.querySelector('.update-modal');
     console.log("Delete fragment function triggered");
-    // Add your delete logic here
+    try {
+      await deleteFragmentById(user, fragmentId);
+      messageDiv.innerHTML = 'Deleted fragment successfully';
+      fragmentStatus.innerHTML = "";
+      await displayFragments();
+      return true;
+    } catch (error) {
+      fragmentStatus.innerHTML = "Failed to delete fragment.";
+      console.error("Error deleting fragment:", error);
+      return false;
+    }
   };
 
   // Drag and Drop Area Event Handlers
@@ -286,6 +332,7 @@ async function init() {
       try {
         await saveUserFragment(user, fragmentType, textValue);
         fragmentStatus.innerHTML = "Fragment created successfully.";
+        
         await displayFragments();
       } catch (error) {
         fragmentStatus.innerHTML = "Failed to create fragment.";

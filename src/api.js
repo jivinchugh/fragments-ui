@@ -93,7 +93,7 @@ export async function updateFragmentExtension(user, id, newExt) {
   console.log('Fetching fragment by ID and extension:', id, newExt);
   try {
     const res = await fetch(`${apiUrl}/v1/fragments/${id}${newExt}`, {
-      method: 'GET',
+      method: 'PUT',
         headers: user.authorizationHeaders()
     });
 
@@ -110,3 +110,22 @@ export async function updateFragmentExtension(user, id, newExt) {
   }
 }
 
+export async function deleteFragmentById(user, id) {
+  console.log('Deleting fragment by ID:', id);
+  try {
+    const res = await fetch(`${apiUrl}/v1/fragments/${id}`, {
+      method: 'DELETE',
+      headers: user.authorizationHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    }
+
+    console.log('Successfully deleted fragment');
+    return true;
+  } catch (err) {
+    console.error('Error deleting fragment:', err);
+    throw err;
+  }
+}
