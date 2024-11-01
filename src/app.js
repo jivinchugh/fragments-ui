@@ -1,6 +1,6 @@
 // src/app.js
 import { Auth, getUser } from './auth';
-import { getUserFragments, saveUserFragment, getUserFragmentById } from './api';
+import { getUserFragments, saveUserFragment, getUserFragmentById, updateFragmentExtension } from './api';
 
 async function init() {
   const userSection = document.querySelector('#user');
@@ -37,11 +37,11 @@ async function init() {
   const displayFragments = async () => {
     const userFragments = await getUserFragments(user);
     fragmentTableBody.innerHTML = '';
-  
+
     if (userFragments && userFragments.fragments.length) {
       // Sort fragments by created date in descending order
       userFragments.fragments.sort((a, b) => new Date(b.created) - new Date(a.created));
-  
+
       userFragments.fragments.forEach(fragment => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -51,20 +51,25 @@ async function init() {
           <td>${new Date(fragment.updated).toLocaleString()}</td>
           <td>${fragment.size}</td>
           <td><button class="get-info-btn" data-id="${fragment.id}">Get Info</button></td>
-        `;
+          <td><button class="update-btn" data-id="${fragment.id}">Update</button></td>
+          `;
         fragmentTableBody.appendChild(row);
       });
-  
-      // Add event listeners to the "Get Info" buttons
+
+      // Add event listeners to the "Get Info" and "Update" buttons
       document.querySelectorAll('.get-info-btn').forEach(button => {
         button.onclick = () => fetchFragmentById(button.dataset.id);
       });
+      document.querySelectorAll('.update-btn').forEach(button => {
+        button.onclick = () => handleUpdateClick(button.dataset.id);
+      });
     } else {
-      fragmentTableBody.innerHTML = '<tr><td colspan="6">No fragments available.</td></tr>';
+      fragmentTableBody.innerHTML = '<tr><td colspan="7">No fragments available.</td></tr>';
     }
   };
-  
+
   await displayFragments();
+  
 
   createFragmentBtn.onclick = async () => {
     const textValue = fragmentText.value.trim();
@@ -79,15 +84,14 @@ async function init() {
     console.log({ textValue });
     console.log({ fragmentType });
     if (fragmentType === 'application/json') {
-        try {
-            formattedValue = JSON.parse(textValue);
-        } catch (e) {
-            fragmentStatus.innerHTML = "Invalid JSON format.";
-            return;
-        }
+      try {
+        formattedValue = JSON.parse(textValue);
+      } catch (e) {
+        fragmentStatus.innerHTML = "Invalid JSON format.";
+        return;
+      }
     } else {
-        // For other fragment types, use `textValue` directly
-        formattedValue = textValue;
+      formattedValue = textValue;
     }
 
     try {
@@ -102,7 +106,7 @@ async function init() {
   };
 
   const fetchFragmentById = async (id) => {
-    fragmentIdInput.value = id; // Set input value to the clicked fragment ID for user reference
+    fragmentIdInput.value = id;
     try {
       const fragmentData = await getUserFragmentById(user, id);
       fragmentStatus.innerHTML = "";
@@ -128,6 +132,126 @@ async function init() {
       return;
     }
     await fetchFragmentById(idValue);
+  };
+
+  // New function to handle update button click
+  const handleUpdateClick = async (fragmentId) => {
+    const fragmentData = await getUserFragmentById(user, fragmentId);
+    const fragment = fragmentData.fragment;
+
+    // Create and show the update modal
+    const updateModal = document.createElement('div');
+    updateModal.className = 'update-modal';
+    updateModal.innerHTML = `
+      <div class="update-modal-content">
+        <h2>Update Fragment</h2>
+        <p>Fragment ID: ${fragment.id}</p>
+        <p>Current Type: ${fragment.type}</p>
+        <label for="newExtension">New Extension:</label>
+        <input type="text" id="newExtension" placeholder="Enter new extension (e.g., txt, md, html)">
+        <div id="extensionMessage" style="color: red;"></div>
+        <button id="changeExtBtn">Change Extension</button>
+        <button id="downloadFragBtn">Download Fragment</button>
+        <button id="deleteFragBtn">Delete Fragment</button>
+        <button id="closeModalBtn">Close</button>
+      </div>
+    `;
+
+    document.body.appendChild(updateModal);
+
+    // Add event listeners for the buttons
+    document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
+    document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
+    document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
+    document.getElementById('deleteFragBtn').addEventListener('click', () => deleteFragment(fragment.id));
+  };
+
+  // Function to change the extension
+  const changeExtension = async (fragmentId) => {
+    const newExt = document.getElementById('newExtension').value.trim();
+    const messageDiv = document.getElementById('extensionMessage');
+    console.log('New extension:', newExt);
+
+    if (!newExt) {
+      messageDiv.innerHTML = 'Please enter a new extension';
+      return;
+    }
+
+    // Prepend a dot if it doesn't exist
+    const formattedExt = newExt.startsWith('.') ? newExt : `.${newExt}`;
+
+
+    try {
+      // Update the extension on the server
+      await updateFragmentExtension(user, fragmentId, formattedExt);
+      messageDiv.innerHTML = 'Extension updated successfully';
+      await displayFragments();
+    } catch (error) {
+      console.error('Error updating extension:', error);
+      messageDiv.innerHTML = 'Failed to update extension';
+    }
+  };
+
+  // Function to download the fragment
+  const downloadFragment = async (fragmentId) => {
+    try {
+      // Fetch the fragment data by ID
+      const fragmentData = await getUserFragmentById(user, fragmentId);
+      if (!fragmentData || !fragmentData.fragment) {
+        console.error('Failed to retrieve fragment data');
+        return;
+      }
+  
+      const fragment = fragmentData.fragment;
+      const fragmentType = fragment.type; // Assuming the type is stored in `fragment.type`
+  
+      // Determine the file extension based on the fragment type
+      let fileExtension;
+      switch (fragmentType) {
+        case 'text/markdown':
+          fileExtension = '.md';
+          break;
+        case 'application/json':
+          fileExtension = '.json';
+          break;
+        case 'text/plain':
+          fileExtension = '.txt';
+          break;
+        case 'text/html':
+          fileExtension = '.html';
+          break;
+        // Add more cases for other types as necessary
+        default:
+          console.warn('Unsupported fragment type. Defaulting to .txt');
+          fileExtension = '.txt'; // Fallback extension
+      }
+  
+      // Convert content to a Blob (adjust MIME type if needed)
+      const blob = new Blob([fragment], { type: fragmentType });
+      const url = URL.createObjectURL(blob);
+  
+      // Create a temporary anchor element for download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fragment_${fragmentId}${fileExtension}`; // Set the file name with the correct extension
+  
+      // Append the anchor to the body (needed for some browsers)
+      document.body.appendChild(a);
+      a.click(); // Trigger the download
+      document.body.removeChild(a); // Clean up
+  
+      // Revoke the blob URL to free memory
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading fragment:', error);
+    }
+  };
+  
+
+  // Function to delete the fragment
+  const deleteFragment = async (fragmentId) => {
+    console.log("Delete fragment function triggered");
+    // Add your delete logic here
   };
 
   // Drag and Drop Area Event Handlers
@@ -204,4 +328,4 @@ async function init() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+window.onload = init;
