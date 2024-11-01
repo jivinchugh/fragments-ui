@@ -87,3 +87,26 @@ export async function getUserFragmentById(user, id) {
     throw err;
   }
 }
+
+
+export async function updateFragmentExtension(user, id, newExt) {
+  console.log('Fetching fragment by ID and extension:', id, newExt);
+  try {
+    const res = await fetch(`${apiUrl}/v1/fragments/${id}${newExt}`, {
+      method: 'GET',
+        headers: user.authorizationHeaders()
+    });
+
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    console.log('Successfully fetched fragment:', data);
+    return data;
+  } catch (err) {
+    console.error('Error fetching fragment:', err);
+    throw err;
+  }
+}
+
