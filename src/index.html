@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>Fragments UI</title>
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style.css" />
     <script type="module" src="./app.js"></script>
 </head>
+
 <body>
     <div class="container">
         <h1>Fragments UI</h1>
@@ -27,12 +29,14 @@
                         <option value="text/csv">text/csv</option>
                         <option value="application/json">application/json</option>
                     </select>
+                    <!-- Adding fragments -->
                     <textarea id="fragmentText" placeholder="Enter your fragment"></textarea>
                     <button id="createFragment">Create Fragment</button>
                     <div id="drop-area" class="drop-area">
                         <p>Drag & Drop your file here</p>
                         <input type="file" id="fileInput" hidden>
                     </div>
+                    <!-- Fetching fragments by ID -->
                     <div id="fragmentStatus"></div>
                     <input type="text" id="fragmentId" placeholder="Enter Fragment ID" />
                     <button id="fetchFragment">Fetch Fragment</button>
@@ -50,8 +54,8 @@
                             </table>
                         </div>
                     </div>
-                    
                 </div>
+                <!-- Fetching All fragments by user -->
                 <div class="fragment-list">
                     <h3>Your Fragments</h3>
                     <table id="fragmentTable">
@@ -63,16 +67,20 @@
                                 <th>Updated</th>
                                 <th>Size</th>
                                 <th>Info</th>
+                                <th>Update</th>
                             </tr>
                         </thead>
                         <tbody id="fragmentTableBody">
-                            <tr><td colspan="4">No fragments available.</td></tr>
+                            <tr>
+                                <td colspan="4">No fragments available.</td>
+                            </tr>
                         </tbody>
-
                     </table>
                 </div>
+
             </div>
         </section>
     </div>
 </body>
+
 </html>
