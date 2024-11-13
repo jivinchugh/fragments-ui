@@ -321,7 +321,7 @@ async function init() {
     }
 
     const fragmentType = file.type;
-    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json'].includes(fragmentType)) {
+    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
       fragmentStatus.innerHTML = "Unsupported file type.";
       return;
     }
@@ -354,7 +354,7 @@ async function init() {
     }
 
     const fragmentType = file.type;
-    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json'].includes(fragmentType)) {
+    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
       fragmentStatus.innerHTML = "Unsupported file type.";
       return;
     }
