@@ -251,6 +251,9 @@ async function init() {
         case 'text/plain':
           fileExtension = '.txt';
           break;
+        case 'text/plain; charset=utf-8':
+          fileExtension = '.txt';
+          break;
         case 'text/html':
           fileExtension = '.html';
           break;
@@ -321,7 +324,7 @@ async function init() {
     }
 
     const fragmentType = file.type;
-    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
+    if (!['text/plain', 'text/plain; charset=utf-8', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
       fragmentStatus.innerHTML = "Unsupported file type.";
       return;
     }
@@ -354,7 +357,7 @@ async function init() {
     }
 
     const fragmentType = file.type;
-    if (!['text/plain', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
+    if (!['text/plain', 'text/plain; charset=utf-8', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
       fragmentStatus.innerHTML = "Unsupported file type.";
       return;
     }
