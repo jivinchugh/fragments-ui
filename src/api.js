@@ -88,6 +88,32 @@ export async function getUserFragmentById(user, id) {
   }
 }
 
+export async function getUserFragment(user, id) {
+  console.log('Fetching fragment by ID:', id);
+  if (!id) {
+    throw new Error('Fragment ID is required');
+  }
+  try {
+    const res = await fetch(`${apiUrl}/v1/fragments/${id}`, {
+      method: 'GET',
+      headers: user.authorizationHeaders(),
+    });
+    console.log('Response from API:', res); 
+
+    if (!res.ok) {
+      throw new Error(`${res.status} ${res.statusText}`);
+    }
+
+    // Directly return the response text instead of parsing as JSON
+    const data = await res.text();
+    console.log('Successfully fetched fragment:', data);
+    return data;
+  } catch (err) {
+    console.error('Error fetching fragment by ID:', err);
+    throw err;
+  }
+}
+
 
 export async function updateFragmentExtension(user, id, newExt) {
   console.log('Fetching fragment by ID and extension:', id, newExt);
