@@ -1,6 +1,6 @@
 // src/app.js
 import { Auth, getUser } from './auth';
-import { getUserFragments, saveUserFragment, getUserFragmentById, updateFragmentExtension, deleteFragmentById } from './api';
+import { getUserFragments, saveUserFragment, getUserFragment, getUserFragmentById, updateFragmentExtension, deleteFragmentById } from './api';
 
 async function init() {
   const userSection = document.querySelector('#user');
@@ -108,18 +108,60 @@ async function init() {
   const fetchFragmentById = async (id) => {
     fragmentIdInput.value = id;
     try {
+      // First, fetch fragment metadata
       const fragmentData = await getUserFragmentById(user, id);
+      console.log('Fragment metadata:', fragmentData);
+  
+      // Then, fetch fragment content
+      const fragmentContent = await getUserFragment(user, id);
+      console.log('Fragment content:', fragmentContent);
+  
+      // Clear previous status and details
       fragmentStatus.innerHTML = "";
       fragmentDetailsBody.innerHTML = '';
-      for (const [key, value] of Object.entries(fragmentData.fragment)) {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${key}</td><td>${value}</td>`;
-        fragmentDetailsBody.appendChild(row);
+      
+      // Create a row to display the fragment content first
+      const contentRow = document.createElement('tr');
+      
+      // Safely display content based on fragment type
+      let displayContent;
+      if (fragmentData.fragment.type === 'application/json') {
+        try {
+          // Pretty print JSON if it's a JSON fragment
+          displayContent = JSON.stringify(JSON.parse(fragmentContent), null, 2);
+        } catch {
+          // If JSON parsing fails, display as is
+          displayContent = fragmentContent;
+        }
+      } else {
+        // For non-JSON fragments, display content as is
+        displayContent = fragmentContent;
       }
+      
+      contentRow.innerHTML = `<td>Content</td><td><pre>${displayContent}</pre></td>`;
+      fragmentDetailsBody.appendChild(contentRow);
+  
+      // Then display fragment metadata
+      for (const [key, value] of Object.entries(fragmentData.fragment)) {
+        // Skip adding the content again
+        if (key !== 'id') {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${key}</td><td>${value}</td>`;
+          fragmentDetailsBody.appendChild(row);
+        }
+      }
+      
+      // Make the fragment details visible
       fragmentDetails.hidden = false;
     } catch (error) {
-      fragmentStatus.innerHTML = "Failed to fetch fragment details.";
-      console.error("Error fetching fragment:", error);
+      console.error("Full error fetching fragment:", error);
+      
+      if (error.message) {
+        fragmentStatus.innerHTML = `Failed to fetch fragment details: ${error.message}`;
+      } else {
+        fragmentStatus.innerHTML = "Failed to fetch fragment details.";
+      }
+      
       fragmentDetails.hidden = true;
     }
   };
@@ -134,58 +176,71 @@ async function init() {
     await fetchFragmentById(idValue);
   };
 
-  // New function to handle update button click
-  const handleUpdateClick = async (fragmentId) => {
-    try {
-      const fragmentData = await getUserFragmentById(user, fragmentId);
-      const fragment = fragmentData.fragment;
+  // Function to handle update button click
+const handleUpdateClick = async (fragmentId) => {
+  try {
+    // Fetch fragment metadata
+    const fragmentData = await getUserFragmentById(user, fragmentId);
+    const fragment = fragmentData.fragment;
 
-      // Create and show the update modal
-      const updateModal = document.createElement('div');
-      updateModal.className = 'update-modal';
-      updateModal.innerHTML = `
-        <div class="update-modal-content">
-          <h2>Update Fragment</h2>
-          <p>Fragment ID: ${fragment.id}</p>
-          <p>Current Type: ${fragment.type}</p>
-          <label id="newExtensionText" for="newExtension">New Extension:</label>
-          <input type="text" id="newExtension" placeholder="Enter new extension (e.g., txt, md, html)">
-          <div id="extensionMessage" style="color: red;"></div>
-          <button id="changeExtBtn">Change Extension</button>
-          <button id="downloadFragBtn">Download Fragment</button>
-          <button id="deleteFragBtn">Delete Fragment</button>
-          <button id="closeModalBtn">Close</button>
-        </div>
-      `;
+    // Fetch actual fragment content
+    const fragmentContent = await getUserFragment(user, fragmentId);
 
-      document.body.appendChild(updateModal);
+    // Create and display the update modal
+    const updateModal = document.createElement('div');
+    updateModal.className = 'update-modal';
 
-      // Add event listeners for the buttons
-      document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
-      document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
-      document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
-      document.getElementById('deleteFragBtn').addEventListener('click', () => {
-        deleteFragment(fragment.id)
-          .then(() => {
-            // Hide or remove specific buttons after deletion
-            const changeExtBtn = document.getElementById('changeExtBtn');
-            const downloadFragBtn = document.getElementById('downloadFragBtn');
-            const deleteFragBtn = document.getElementById('deleteFragBtn');
-
-            if (newExtensionText) newExtensionText.style.display = 'none';
-            if (newExtension) newExtension.style.display = 'none';
-            if (changeExtBtn) changeExtBtn.style.display = 'none';
-            if (changeExtBtn) changeExtBtn.style.display = 'none';
-            if (downloadFragBtn) downloadFragBtn.style.display = 'none';
-            if (deleteFragBtn) deleteFragBtn.style.display = 'none';
-
-          });
-      });
-    } catch (error) {
-      console.error('Error fetching fragment details:', error);
-      fragmentStatus.innerHTML = "Failed to load fragment details.";
+    // Display content safely based on fragment type
+    let displayContent;
+    if (fragment.type === 'application/json') {
+      try {
+        displayContent = JSON.stringify(JSON.parse(fragmentContent), null, 2);
+      } catch {
+        displayContent = fragmentContent;
+      }
+    } else {
+      displayContent = fragmentContent;
     }
-  };
+
+    // Modal HTML content
+    updateModal.innerHTML = `
+      <div class="update-modal-content">
+        <h2>Update Fragment</h2>
+        <div class="fragment-content-section">
+          <h3>Fragment Content</h3>
+          <pre class="fragment-content">${displayContent}</pre>
+        </div>
+        <p>Fragment ID: ${fragment.id}</p>
+        <p>Current Type: ${fragment.type}</p>
+        <label id="newExtensionText" for="newExtension">New Extension:</label>
+        <input type="text" id="newExtension" placeholder="Enter new extension (e.g., txt, md, html)">
+        <div id="extensionMessage" class="error-message"></div>
+        <button id="changeExtBtn">Change Extension</button>
+        <button id="downloadFragBtn">Download Fragment</button>
+        <button id="deleteFragBtn">Delete Fragment</button>
+        <button id="closeModalBtn">Close</button>
+      </div>
+    `;
+
+    document.body.appendChild(updateModal);
+
+    // Add event listeners for buttons
+    document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
+    document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
+    document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
+    document.getElementById('deleteFragBtn').addEventListener('click', () => {
+      deleteFragment(fragment.id).then(() => {
+        // Hide buttons and inputs after deletion
+        ['changeExtBtn', 'downloadFragBtn', 'deleteFragBtn', 'newExtensionText', 'newExtension']
+          .forEach(id => document.getElementById(id)?.remove());
+      });
+    });
+  } catch (error) {
+    console.error('Error fetching fragment details:', error);
+    document.getElementById('fragmentStatus').innerHTML = "Failed to load fragment details.";
+  }
+};
+
 
   // Function to change the extension
   const changeExtension = async (fragmentId) => {
@@ -229,16 +284,19 @@ async function init() {
   // Function to download the fragment
   const downloadFragment = async (fragmentId) => {
     try {
-      // Fetch the fragment data by ID
+      // First, fetch the fragment metadata
       const fragmentData = await getUserFragmentById(user, fragmentId);
       if (!fragmentData || !fragmentData.fragment) {
         console.error('Failed to retrieve fragment data');
         return;
       }
-
+  
       const fragment = fragmentData.fragment;
-      const fragmentType = fragment.type; // Assuming the type is stored in `fragment.type`
-
+      const fragmentType = fragment.type;
+  
+      // Fetch the actual fragment content
+      const fragmentContent = await getUserFragment(user, fragmentId);
+  
       // Determine the file extension based on the fragment type
       let fileExtension;
       switch (fragmentType) {
@@ -249,34 +307,31 @@ async function init() {
           fileExtension = '.json';
           break;
         case 'text/plain':
-          fileExtension = '.txt';
-          break;
         case 'text/plain; charset=utf-8':
           fileExtension = '.txt';
           break;
         case 'text/html':
           fileExtension = '.html';
           break;
-        // Add more cases for other types as necessary
         default:
           console.warn('Unsupported fragment type. Defaulting to .txt');
-          fileExtension = '.txt'; // Fallback extension
+          fileExtension = '.txt';
       }
-
-      // Convert content to a Blob (adjust MIME type if needed)
-      const blob = new Blob([fragment], { type: fragmentType });
+  
+      // Convert content to a Blob
+      const blob = new Blob([fragmentContent], { type: fragmentType });
       const url = URL.createObjectURL(blob);
-
+  
       // Create a temporary anchor element for download
       const a = document.createElement('a');
       a.href = url;
-      a.download = `fragment_${fragmentId}${fileExtension}`; // Set the file name with the correct extension
-
+      a.download = `fragment_${fragmentId}${fileExtension}`;
+  
       // Append the anchor to the body (needed for some browsers)
       document.body.appendChild(a);
       a.click(); // Trigger the download
       document.body.removeChild(a); // Clean up
-
+  
       // Revoke the blob URL to free memory
       URL.revokeObjectURL(url);
     } catch (error) {
