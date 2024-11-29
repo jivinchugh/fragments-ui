@@ -70,7 +70,6 @@ async function init() {
 
   await displayFragments();
 
-
   createFragmentBtn.onclick = async () => {
     const textValue = fragmentText.value.trim();
     const fragmentType = fragmentTypeSelector.value;
@@ -96,6 +95,7 @@ async function init() {
 
     try {
       await saveUserFragment(user, fragmentType, textValue);
+      console.log("2222222222222222");
       fragmentStatus.innerHTML = "Fragment created successfully.";
       fragmentText.value = "";
       await displayFragments();
@@ -111,18 +111,18 @@ async function init() {
       // First, fetch fragment metadata
       const fragmentData = await getUserFragmentById(user, id);
       console.log('Fragment metadata:', fragmentData);
-  
+
       // Then, fetch fragment content
       const fragmentContent = await getUserFragment(user, id);
       console.log('Fragment content:', fragmentContent);
-  
+
       // Clear previous status and details
       fragmentStatus.innerHTML = "";
       fragmentDetailsBody.innerHTML = '';
-      
+
       // Create a row to display the fragment content first
       const contentRow = document.createElement('tr');
-      
+
       // Safely display content based on fragment type
       let displayContent;
       if (fragmentData.fragment.type === 'application/json') {
@@ -133,14 +133,17 @@ async function init() {
           // If JSON parsing fails, display as is
           displayContent = fragmentContent;
         }
+      } else if (fragmentData.fragment.type.startsWith('image/')) {
+        // For image fragments, create an img element
+        displayContent = `<img src="data:${fragmentData.fragment.type};base64,${fragmentContent}" alt="Fragment Image" style="max-width: 300px;">`;
       } else {
         // For non-JSON fragments, display content as is
         displayContent = fragmentContent;
       }
-      
-      contentRow.innerHTML = `<td>Content</td><td><pre>${displayContent}</pre></td>`;
+
+      contentRow.innerHTML = `<td>Content</td><td>${displayContent}</td>`;
       fragmentDetailsBody.appendChild(contentRow);
-  
+
       // Then display fragment metadata
       for (const [key, value] of Object.entries(fragmentData.fragment)) {
         // Skip adding the content again
@@ -150,18 +153,18 @@ async function init() {
           fragmentDetailsBody.appendChild(row);
         }
       }
-      
+
       // Make the fragment details visible
       fragmentDetails.hidden = false;
     } catch (error) {
       console.error("Full error fetching fragment:", error);
-      
+
       if (error.message) {
         fragmentStatus.innerHTML = `Failed to fetch fragment details: ${error.message}`;
       } else {
         fragmentStatus.innerHTML = "Failed to fetch fragment details.";
       }
-      
+
       fragmentDetails.hidden = true;
     }
   };
@@ -176,34 +179,92 @@ async function init() {
     await fetchFragmentById(idValue);
   };
 
-  // Function to handle update button click
-const handleUpdateClick = async (fragmentId) => {
-  try {
-    // Fetch fragment metadata
-    const fragmentData = await getUserFragmentById(user, fragmentId);
-    const fragment = fragmentData.fragment;
+  // Update file handling functions
+  const handleFileUpload = async (file) => {
+    const fragmentType = file.type;
+    const supportedTypes = [
+      'text/plain', 'text/plain; charset=utf-8', 
+      'text/markdown', 'text/html', 'text/csv', 
+      'application/json', 'application/yaml', 
+      'image/png', 'image/jpeg', 'image/webp', 
+      'image/avif', 'image/gif'
+    ];
 
-    // Fetch actual fragment content
-    const fragmentContent = await getUserFragment(user, fragmentId);
-
-    // Create and display the update modal
-    const updateModal = document.createElement('div');
-    updateModal.className = 'update-modal';
-
-    // Display content safely based on fragment type
-    let displayContent;
-    if (fragment.type === 'application/json') {
-      try {
-        displayContent = JSON.stringify(JSON.parse(fragmentContent), null, 2);
-      } catch {
-        displayContent = fragmentContent;
-      }
-    } else {
-      displayContent = fragmentContent;
+    if (!supportedTypes.includes(fragmentType)) {
+      fragmentStatus.innerHTML = "Unsupported file type.";
+      return;
     }
 
-    // Modal HTML content
-    updateModal.innerHTML = `
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      let fragmentData = e.target.result;
+
+      // For image files, we want to use the base64 data URL directly
+      if (fragmentType.startsWith('image/')) {
+        // Remove the data URL prefix to send just the base64 data
+        fragmentData = fragmentData.split(',')[1];
+      }
+
+      try {
+        await saveUserFragment(user, fragmentType, fragmentData);
+        console.log("1333333333333333333333");
+        fragmentStatus.innerHTML = "Fragment created successfully.";
+        await displayFragments();
+      } catch (error) {
+        fragmentStatus.innerHTML = "Failed to create fragment.";
+        console.error("Error creating fragment:", error);
+      }
+    };
+
+    // Use readAsDataURL for image files, readAsText for text-based files
+    if (fragmentType.startsWith('image/')) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsText(file);
+    }
+  };
+
+  fileInput.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      fragmentStatus.innerHTML = "No file selected.";
+      return;
+    }
+
+    await handleFileUpload(file);
+  });
+
+  const handleUpdateClick = async (fragmentId) => {
+    // Existing handleUpdateClick code remains the same
+    try {
+      // Fetch fragment metadata
+      const fragmentData = await getUserFragmentById(user, fragmentId);
+      const fragment = fragmentData.fragment;
+
+      // Fetch actual fragment content
+      const fragmentContent = await getUserFragment(user, fragmentId);
+
+      // Create and display the update modal
+      const updateModal = document.createElement('div');
+      updateModal.className = 'update-modal';
+
+      // Display content safely based on fragment type
+      let displayContent;
+      if (fragment.type === 'application/json') {
+        try {
+          displayContent = JSON.stringify(JSON.parse(fragmentContent), null, 2);
+        } catch {
+          displayContent = fragmentContent;
+        }
+      } else if (fragment.type.startsWith('image/')) {
+        // For image fragments, create an img element
+        displayContent = `<img src="data:${fragment.type};base64,${fragmentContent}" alt="Fragment Image" style="max-width: 300px;">`;
+      } else {
+        displayContent = fragmentContent;
+      }
+
+      // Modal HTML content
+      updateModal.innerHTML = `
       <div class="update-modal-content">
         <h2>Update Fragment</h2>
         <div class="fragment-content-section">
@@ -222,24 +283,24 @@ const handleUpdateClick = async (fragmentId) => {
       </div>
     `;
 
-    document.body.appendChild(updateModal);
+      document.body.appendChild(updateModal);
 
-    // Add event listeners for buttons
-    document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
-    document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
-    document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
-    document.getElementById('deleteFragBtn').addEventListener('click', () => {
-      deleteFragment(fragment.id).then(() => {
-        // Hide buttons and inputs after deletion
-        ['changeExtBtn', 'downloadFragBtn', 'deleteFragBtn', 'newExtensionText', 'newExtension']
-          .forEach(id => document.getElementById(id)?.remove());
+      // Add event listeners for buttons
+      document.getElementById('changeExtBtn').addEventListener('click', () => changeExtension(fragment.id));
+      document.getElementById('downloadFragBtn').addEventListener('click', () => downloadFragment(fragment.id));
+      document.getElementById('closeModalBtn').addEventListener('click', () => updateModal.remove());
+      document.getElementById('deleteFragBtn').addEventListener('click', () => {
+        deleteFragment(fragment.id).then(() => {
+          // Hide buttons and inputs after deletion
+          ['changeExtBtn', 'downloadFragBtn', 'deleteFragBtn', 'newExtensionText', 'newExtension']
+            .forEach(id => document.getElementById(id)?.remove());
+        });
       });
-    });
-  } catch (error) {
-    console.error('Error fetching fragment details:', error);
-    document.getElementById('fragmentStatus').innerHTML = "Failed to load fragment details.";
-  }
-};
+    } catch (error) {
+      console.error('Error fetching fragment details:', error);
+      document.getElementById('fragmentStatus').innerHTML = "Failed to load fragment details.";
+    }
+  };
 
 
   // Function to change the extension
@@ -290,13 +351,13 @@ const handleUpdateClick = async (fragmentId) => {
         console.error('Failed to retrieve fragment data');
         return;
       }
-  
+
       const fragment = fragmentData.fragment;
       const fragmentType = fragment.type;
-  
+
       // Fetch the actual fragment content
       const fragmentContent = await getUserFragment(user, fragmentId);
-  
+
       // Determine the file extension based on the fragment type
       let fileExtension;
       switch (fragmentType) {
@@ -313,25 +374,41 @@ const handleUpdateClick = async (fragmentId) => {
         case 'text/html':
           fileExtension = '.html';
           break;
+        case 'image/png':
+          fileExtension = '.png';
+          break;
+        case 'image/jpeg':
+          fileExtension = '.jpg';
+          break;
+        case 'image/webp':
+          fileExtension = '.webp';
+          break;
+        case 'image/avif':
+          fileExtension = '.avif';
+          break;
+        case 'image/gif':
+          fileExtension = '.gif';
+          break;
         default:
           console.warn('Unsupported fragment type. Defaulting to .txt');
           fileExtension = '.txt';
       }
-  
+
+
       // Convert content to a Blob
       const blob = new Blob([fragmentContent], { type: fragmentType });
       const url = URL.createObjectURL(blob);
-  
+
       // Create a temporary anchor element for download
       const a = document.createElement('a');
       a.href = url;
       a.download = `fragment_${fragmentId}${fileExtension}`;
-  
+
       // Append the anchor to the body (needed for some browsers)
       document.body.appendChild(a);
       a.click(); // Trigger the download
       document.body.removeChild(a); // Clean up
-  
+
       // Revoke the blob URL to free memory
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -386,51 +463,56 @@ const handleUpdateClick = async (fragmentId) => {
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const textValue = e.target.result;
+      const arrayBuffer = e.target.result;
+      const fragmentType = file.type;
+
       try {
-        await saveUserFragment(user, fragmentType, textValue);
+        await saveUserFragment(user, fragmentType, arrayBuffer);
+        console.log("444444444444444444444");
         fragmentStatus.innerHTML = "Fragment created successfully.";
-        
         await displayFragments();
       } catch (error) {
         fragmentStatus.innerHTML = "Failed to create fragment.";
         console.error("Error creating fragment:", error);
       }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   });
 
   dropArea.addEventListener('click', () => {
     fileInput.click();
   });
 
-  fileInput.addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) {
-      fragmentStatus.innerHTML = "No file selected.";
-      return;
-    }
+  // fileInput.addEventListener('change', async (event) => {
+  //   const file = event.target.files[0];
+  //   if (!file) {
+  //     fragmentStatus.innerHTML = "No file selected.";
+  //     return;
+  //   }
 
-    const fragmentType = file.type;
-    if (!['text/plain', 'text/plain; charset=utf-8', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
-      fragmentStatus.innerHTML = "Unsupported file type.";
-      return;
-    }
+  //   const fragmentType = file.type;
+  //   if (!['text/plain', 'text/plain; charset=utf-8', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
+  //     fragmentStatus.innerHTML = "Unsupported file type.";
+  //     return;
+  //   }
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const textValue = e.target.result;
-      try {
-        await saveUserFragment(user, fragmentType, textValue);
-        fragmentStatus.innerHTML = "Fragment created successfully.";
-        await displayFragments();
-      } catch (error) {
-        fragmentStatus.innerHTML = "Failed to create fragment.";
-        console.error("Error creating fragment:", error);
-      }
-    };
-    reader.readAsText(file);
-  });
+  //   const reader = new FileReader();
+  //   reader.onload = async (e) => {
+  //     const arrayBuffer = e.target.result;
+  //     const fragmentType = file.type;
+
+  //     try {
+  //       await saveUserFragment(user, fragmentType, arrayBuffer);
+  //       console.log("1111111111111111111111");
+  //       fragmentStatus.innerHTML = "Fragment created successfully.";
+  //       await displayFragments();
+  //     } catch (error) {
+  //       fragmentStatus.innerHTML = "Failed to create fragment.";
+  //       console.error("Error creating fragment:", error);
+  //     }
+  //   };
+  //   reader.readAsArrayBuffer(file);
+  // });
 }
 
 window.onload = init;
