@@ -94,21 +94,8 @@ nav button:hover {
   height: auto;
   border-radius: 8px;
   background-color: #f9f9f9;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-/* Adjust margins for better spacing */
-.fragment-creation {
   margin-right: 20px; /* Space between sections */
-}
-
-.fragment-content {
-  background-color: #f4f4f4;
-  border: 1px solid #ddd;
-  padding: 10px;
-  max-height: 300px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Label and input styles */
