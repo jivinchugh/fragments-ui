@@ -198,6 +198,7 @@ async function init() {
     const reader = new FileReader();
     reader.onload = async (e) => {
       let fragmentData = e.target.result;
+      const fragmentType = file.type;
 
       // For image files, we want to use the base64 data URL directly
       if (fragmentType.startsWith('image/')) {
@@ -206,6 +207,7 @@ async function init() {
       }
 
       try {
+        console.log("creating image fragment");
         await saveUserFragment(user, fragmentType, fragmentData);
         console.log("1333333333333333333333");
         fragmentStatus.innerHTML = "Fragment created successfully.";
@@ -463,12 +465,15 @@ async function init() {
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
+      const fragmentData = e.target.result;
       const fragmentType = file.type;
+      if (fragmentType.startsWith('image/')) {
+        fragmentData = fragmentData.split(',')[1];
+      }
 
       try {
-        await saveUserFragment(user, fragmentType, arrayBuffer);
-        console.log("444444444444444444444");
+        console.log("creating image fragment");
+        await saveUserFragment(user, fragmentType, fragmentData);
         fragmentStatus.innerHTML = "Fragment created successfully.";
         await displayFragments();
       } catch (error) {
@@ -482,37 +487,6 @@ async function init() {
   dropArea.addEventListener('click', () => {
     fileInput.click();
   });
-
-  // fileInput.addEventListener('change', async (event) => {
-  //   const file = event.target.files[0];
-  //   if (!file) {
-  //     fragmentStatus.innerHTML = "No file selected.";
-  //     return;
-  //   }
-
-  //   const fragmentType = file.type;
-  //   if (!['text/plain', 'text/plain; charset=utf-8', 'text/markdown', 'text/html', 'text/csv', 'application/json', 'application/yaml', 'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif'].includes(fragmentType)) {
-  //     fragmentStatus.innerHTML = "Unsupported file type.";
-  //     return;
-  //   }
-
-  //   const reader = new FileReader();
-  //   reader.onload = async (e) => {
-  //     const arrayBuffer = e.target.result;
-  //     const fragmentType = file.type;
-
-  //     try {
-  //       await saveUserFragment(user, fragmentType, arrayBuffer);
-  //       console.log("1111111111111111111111");
-  //       fragmentStatus.innerHTML = "Fragment created successfully.";
-  //       await displayFragments();
-  //     } catch (error) {
-  //       fragmentStatus.innerHTML = "Failed to create fragment.";
-  //       console.error("Error creating fragment:", error);
-  //     }
-  //   };
-  //   reader.readAsArrayBuffer(file);
-  // });
 }
 
 window.onload = init;
