@@ -116,22 +116,27 @@ export async function getUserFragment(user, id) {
 
 
 export async function updateFragmentExtension(user, id, newExt) {
-  console.log('Fetching fragment by ID and extension:', id, newExt);
+  console.log('Updating fragment extension:', id, newExt);
   try {
-    const res = await fetch(`${apiUrl}/v1/fragments/${id}${newExt}`, {
+    // Remove the dot if it exists
+    const cleanExt = newExt.startsWith('.') ? newExt.slice(1) : newExt;
+    
+    const res = await fetch(`${apiUrl}/v1/fragments/${id}.${cleanExt}`, {
       method: 'PUT',
-        headers: user.authorizationHeaders()
+      headers: user.authorizationHeaders()
     });
 
     if (!res.ok) {
-      throw new Error(`${res.status} ${res.statusText}`);
+      const errorText = await res.text();
+      console.error('Error response:', errorText);
+      throw new Error(`${res.status} ${res.statusText}: ${errorText}`);
     }
 
     const data = await res.json();
-    console.log('Successfully fetched fragment:', data);
+    console.log('Successfully updated fragment extension:', data);
     return data;
   } catch (err) {
-    console.error('Error fetching fragment:', err);
+    console.error('Error updating fragment extension:', err);
     throw err;
   }
 }
